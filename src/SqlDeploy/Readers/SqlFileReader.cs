@@ -1,12 +1,13 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
+using JetBrains.Annotations;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace SqlDeploy.Readers
 {
     public class SqlFileReader
     {
-        public TSqlScript Read(string fileName)
+        [NotNull]
+        public TSqlScript Read([NotNull] string fileName)
         {
             var parser = new TSql140Parser(initialQuotedIdentifiers: true, engineType: SqlEngineType.All);
 
@@ -15,11 +16,6 @@ namespace SqlDeploy.Readers
                 using (var reader = new StreamReader(file))
                 {
                     var script = (TSqlScript) parser.Parse(reader, out var errors);
-                    if (errors.Count != 0)
-                    {
-                        // throw new Exception(String.Join(Environment.NewLine, errors));
-                    }
-
                     return script;
                 }
             }
