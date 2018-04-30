@@ -8,6 +8,7 @@ namespace SqlDeploy.Modifiers
         [NotNull]
         private readonly List<IModifier> _modifiers = new List<IModifier>
         {
+            new DeleteDbBeforeCreation(),
             new SetRecoveryMode(),
             new SeparateConstrains(),
         };

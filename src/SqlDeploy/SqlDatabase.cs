@@ -29,17 +29,7 @@ namespace SqlDeploy
 
         public Task DeleteAsync()
         {
-            return _sqlExecuter.ExecuteSqlAsync(new TSqlBatch
-            {
-                Statements =
-                {
-                    new DropDatabaseStatement
-                    {
-                        Databases = { _database },
-                        IsIfExists = true,
-                    }
-                }
-            });
+            return _sqlExecuter.ExecuteSqlScriptAsync(SqlCommands.GetDeleteDb(_database));
         }
 
         public void Dispose()

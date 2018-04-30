@@ -1,0 +1,6 @@
+﻿CREATE TABLE [dbo].[Order]
+(
+	[Id] BIGINT NOT NULL PRIMARY KEY,
+	[UserId] BIGINT NOT NULL, 
+    CONSTRAINT [FK_Order_User] FOREIGN KEY ([UserId]) REFERENCES [User]([Id]),
+)

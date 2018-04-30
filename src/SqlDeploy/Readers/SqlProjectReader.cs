@@ -12,7 +12,7 @@ namespace SqlDeploy.Readers
     {
         private readonly string _basePath;
         private readonly ProjectRootElement _project;
-        private readonly SqlFileReader _sqlFileReader = new SqlFileReader();
+        private readonly SqlReader _sqlReader = new SqlReader();
 
         public SqlProjectReader([NotNull] string projectPath)
         {
@@ -28,11 +28,11 @@ namespace SqlDeploy.Readers
             _basePath = Path.GetFullPath(Path.GetDirectoryName(projectPath));
         }
 
-        public SqlProject ReadProject()
+        public SqlProject ReadProject(string databaseName)
         {
             return new SqlProject
             {
-                Database = RecreateDatabase("Test"),
+                Database = RecreateDatabase(databaseName),
                 Objects = ReadItems("Build"),
                 PostDeployFilePath = GetFiles("PostDeploy").SingleOrDefault(),
                 PreDeployFilePath = GetFiles("PreDeploy").SingleOrDefault(),
@@ -52,7 +52,7 @@ namespace SqlDeploy.Readers
         {
             var tableFiles = GetFiles(itemType);
 
-            var scripts = tableFiles.Select(path => _sqlFileReader.Read(path));
+            var scripts = tableFiles.Select(path => _sqlReader.ReadFromFile(path));
 
             var resultScript = new TSqlScript();
 
@@ -80,19 +80,6 @@ namespace SqlDeploy.Readers
             {
                 Batches =
                 {
-                    new TSqlBatch
-                    {
-                        Statements =
-                        {
-                            new DropDatabaseStatement
-                            {
-                                Databases = {
-                                    dbIdentifier
-                                },
-                                IsIfExists = true,
-                            },
-                        }
-                    },
                     new TSqlBatch
                     {
                         Statements =

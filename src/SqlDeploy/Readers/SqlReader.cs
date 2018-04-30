@@ -4,10 +4,10 @@ using Microsoft.SqlServer.TransactSql.ScriptDom;
 
 namespace SqlDeploy.Readers
 {
-    public class SqlFileReader
+    public class SqlReader
     {
         [NotNull]
-        public TSqlScript Read([NotNull] string fileName)
+        public TSqlScript ReadFromFile([NotNull] string fileName)
         {
             var parser = new TSql140Parser(initialQuotedIdentifiers: true, engineType: SqlEngineType.All);
 
@@ -18,6 +18,18 @@ namespace SqlDeploy.Readers
                     var script = (TSqlScript) parser.Parse(reader, out var errors);
                     return script;
                 }
+            }
+        }
+
+        [NotNull]
+        public TSqlScript ReadFromString([NotNull] string sql)
+        {
+            var parser = new TSql140Parser(initialQuotedIdentifiers: true, engineType: SqlEngineType.All);
+
+            using (var reader = new StringReader(sql))
+            {
+                var script = (TSqlScript)parser.Parse(reader, out var errors);
+                return script;
             }
         }
     }

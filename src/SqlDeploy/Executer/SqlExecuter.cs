@@ -13,9 +13,9 @@ namespace SqlDeploy.Executer
         private readonly SqlConnection _connection;
         private readonly SqlCmd _sqlCmd;
 
-        private readonly SqlGenerator _generator = new SqlGenerator();
+        private readonly SqlGenerator Generator = new SqlGenerator();
 
-        public string ConnectionString => _connection.ConnectionString;
+        public string ConnectionString { get; }
 
         public SqlExecuter([NotNull] string connectionString)
             :this(new SqlConnection(connectionString))
@@ -25,6 +25,7 @@ namespace SqlDeploy.Executer
         {
             _connection = sqlConnection ?? throw new ArgumentNullException(nameof(sqlConnection));
             _sqlCmd = new SqlCmd(_connection);
+            ConnectionString = _connection.ConnectionString;
         }
 
         public async Task ExecuteAsync([NotNull] SqlProject project)
@@ -40,8 +41,8 @@ namespace SqlDeploy.Executer
                     _sqlCmd.ExecuteFile(project.PreDeployFilePath);
                 }
 
-                await ExecuteSqlAsync(project.Database.Batches).ConfigureAwait(false);
-                await ExecuteSqlAsync(project.Objects.Batches).ConfigureAwait(false);
+                await ExecuteSqlAsync(project.Database).ConfigureAwait(false);
+                await ExecuteSqlAsync(project.Objects).ConfigureAwait(false);
 
                 if (project.PostDeployFilePath != null)
                 {
@@ -54,21 +55,37 @@ namespace SqlDeploy.Executer
             }
         }
 
-        public async Task ExecuteSqlAsync([NotNull, ItemNotNull] IEnumerable<TSqlBatch> batches)
+        public async Task ExecuteSqlScriptAsync([NotNull] TSqlScript sqlScript)
         {
-            foreach (var batch in batches)
+            if (sqlScript == null) throw new ArgumentNullException(nameof(sqlScript));
+            await _connection.OpenAsync().ConfigureAwait(false);
+
+            try
+            {
+                await ExecuteSqlAsync(sqlScript).ConfigureAwait(false);
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
+
+        private async Task ExecuteSqlAsync([NotNull] TSqlScript sqlScript)
+        {
+            foreach (var batch in sqlScript.Batches)
             {
                 await ExecuteSqlAsync(batch).ConfigureAwait(false);
             }
         }
 
-        public Task ExecuteSqlAsync(TSqlBatch sqlBatch)
+        private Task ExecuteSqlAsync(TSqlBatch sqlBatch)
         {
-            var command = _connection.CreateCommand();
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = Generator.GetSql(sqlBatch);
 
-            command.CommandText = _generator.GetSql(sqlBatch);
-
-            return command.ExecuteNonQueryAsync();
+                return command.ExecuteNonQueryAsync();
+            }
         }
 
         public void Dispose()

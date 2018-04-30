@@ -1,4 +1,5 @@
-﻿using System.Data.SqlClient;
+﻿using System;
+using System.Data.SqlClient;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using SqlDeploy.Executer;
@@ -16,9 +17,12 @@ namespace SqlDeploy
             _sqlProjectReader = new SqlProjectReader(sqlProjectFilePath);
         }
 
-        public async Task<ISqlDatabase> RecreateToAsync([NotNull] SqlConnection connection)
+        public async Task<ISqlDatabase> RecreateToAsync([NotNull] SqlConnection connection, [NotNull] string databaseName)
         {
-            var sqlProject = _sqlProjectReader.ReadProject();
+            if (connection == null) throw new ArgumentNullException(nameof(connection));
+            if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+            var sqlProject = _sqlProjectReader.ReadProject(databaseName);
 
             _modifiers.Modify(sqlProject);
 
