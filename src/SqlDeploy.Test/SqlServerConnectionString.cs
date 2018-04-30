@@ -11,6 +11,12 @@ namespace SqlDeploy.Test
 
         private static readonly Lazy<string> LazyConnectionString = new Lazy<string>(() =>
         {
+            var connectionString = Environment.GetEnvironmentVariable("SqlDeployConnectionString");
+            if (connectionString != null)
+            {
+                return connectionString;
+            }
+
             if (Environment.OSVersion.Platform == PlatformID.Unix)
             {
                 return DockerConnectionString;
